@@ -43,7 +43,7 @@ export default function Navbar() {
           <Link to="/register" className={isActive('/register') ? 'active' : ''} onClick={closeMobileMenu}>
             Register
           </Link>
-          {user && (
+          {user ? (
             <>
               <Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''} onClick={closeMobileMenu}>
                 Dashboard
@@ -55,6 +55,10 @@ export default function Navbar() {
                 Logout ({user.role})
               </button>
             </>
+          ) : (
+            <Link to="/login" className={isActive('/login') ? 'active' : ''} onClick={closeMobileMenu}>
+              Login
+            </Link>
           )}
         </div>
       </div>
