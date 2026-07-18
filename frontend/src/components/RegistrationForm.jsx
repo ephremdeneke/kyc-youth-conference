@@ -378,7 +378,7 @@ export default function RegistrationForm({ onSuccess }) {
           border: 1px solid var(--color-border);
         }
         .form-hero {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #6366f1 100%);
+          background: linear-gradient(135deg,  #1c6d07, #0f350c 100%);
           color: white;
           padding: 2rem 2rem 1.75rem;
           text-align: center;
@@ -518,7 +518,7 @@ export default function RegistrationForm({ onSuccess }) {
           padding: 1rem;
         }
         .payment-info-card {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: linear-gradient(135deg,  #1c6d07, #0f350c 100%);
           border-radius: 16px;
           padding: 1.5rem;
           margin-bottom: 1.5rem;
@@ -651,12 +651,12 @@ export default function RegistrationForm({ onSuccess }) {
           font-size: 1.0625rem;
           font-weight: 600;
           border-radius: 12px;
-          background: linear-gradient(135deg, #1e40af, #3b82f6);
+          background: linear-gradient(135deg, #1c6d07, #0f350c);
         }
         .btn-submit:hover:not(:disabled) {
-          background: linear-gradient(135deg, #1e3a8a, #2563eb);
+          background: linear-gradient(135deg, #1c6d07, #0f350c);
           transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+          box-shadow: 0 8px 20px rgba(9, 49, 11, 0.35);
         }
         .spinner {
           width: 18px;
