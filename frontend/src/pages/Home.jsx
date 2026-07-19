@@ -75,7 +75,7 @@ export default function Home() {
               Register Now
               <span className="btn-arrow">→</span>
             </Link>
-            <Link to="/contact" className="btn btn-secondary btn-large">
+            <Link to="" className="btn btn-secondary btn-large">
               Learn More
             </Link>
           </div>

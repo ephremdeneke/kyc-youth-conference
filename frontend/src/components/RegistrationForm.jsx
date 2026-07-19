@@ -15,13 +15,13 @@ const OTHER_CHURCH = 'Other';
 const INITIAL_FORM = {
   fullName: '',
   phone: '',
-  telegram: '',
+  status: '',
   church: '',
   otherChurch: '',
   address: '',
   gender: '',
   age: '',
-  payment: 'Unpaid',
+  payment: 'Paid',
   transactionNumber: '',
   screenshot: '',
   screenshotFile: null,
@@ -79,6 +79,11 @@ export default function RegistrationForm({ onSuccess }) {
 
     if (!form.gender) {
       setError('Please select your gender.');
+      return;
+    }
+
+    if (!form.status) {
+      setError('Please select whether you are a student or working.');
       return;
     }
 
@@ -167,20 +172,20 @@ export default function RegistrationForm({ onSuccess }) {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="telegram">Telegram Username *</label>
-                  <div className="input-with-prefix">
-                    <span className="input-prefix">@</span>
-                    <input
-                      id="telegram"
-                      name="telegram"
-                      value={form.telegram}
-                      onChange={handleChange}
-                      required
-                      placeholder="yourusername"
-                      className="styled-input prefixed"
-                    />
+                  <label>Are you a student or working? *</label>
+                  <div className="gender-pills">
+                    {['Student', 'Working'].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`gender-pill ${form.status === s ? 'active' : ''}`}
+                        onClick={() => setForm((prev) => ({ ...prev, status: s }))}
+                      >
+                        {s}
+                      </button>
+                    ))}
                   </div>
-                  <p className="field-hint">QR code and registration card will be sent here.</p>
+                  <input type="hidden" name="status" value={form.status} required />
                 </div>
 
                 <div className="form-row">
@@ -276,7 +281,7 @@ export default function RegistrationForm({ onSuccess }) {
                   <div className="payment-header">
                     <span className="payment-icon">💳</span>
                     <div>
-                      <h4>Registration Fee: 800 Birr</h4>
+                      <h4>Registration Fee: 800 Birr for workers and 400 for students </h4>
                       <p>Pay via CBE or Bank of Abyssinia</p>
                     </div>
                   </div>
@@ -298,7 +303,7 @@ export default function RegistrationForm({ onSuccess }) {
                   <div className="payment-instructions">
                     <p className="instruction-title">የክፍያ ማረጋገጫ - የባንክ ቁጥር</p>
                     <p className="instruction-text">
-                      የምዝገባ ክፍያ: 800 ብር። በCBE ወይም አቢሲኒያ ባንክ ይክፈሉ፣ የክፍያ ስክሪንሾትዎን ማስፈንጠሪያ ከታች ይለጥፉ።
+                      የምዝገባ ክፍያ: 800 ብር: ለሰራተኞች እንዲሁም 400ብር ለተማሪዎች በCBE ወይም አቢሲኒያ ባንክ ይክፈሉ፣ የክፍያ ስክሪንሾትዎን ማስፈንጠሪያ ከታች ይለጥፉ።
                     </p>
                   </div>
                 </div>

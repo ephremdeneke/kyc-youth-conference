@@ -7,7 +7,6 @@ import Success from './pages/Success';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Participants from './pages/Participants';
-import Contact from './pages/Contact';
 
 export default function App() {
   return (
@@ -20,7 +19,6 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/participants" element={<Participants />} />
-        <Route path="/contact" element={<Contact />} />
       </Routes>
       <Footer />
     </>

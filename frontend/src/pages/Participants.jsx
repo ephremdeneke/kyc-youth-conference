@@ -1,226 +1,213 @@
-import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { getParticipants, searchParticipants, updateParticipant, markPayment } from '../services/api';
-import { useAuth } from '../hooks/useAuth';
-import { useDebounce } from '../hooks/useAuth';
-import SearchBox from '../components/SearchBox';
+import { useLocation, Link, Navigate } from 'react-router-dom';
+import { formatTelegram } from '../utils/participant';
 import ParticipantCard from '../components/ParticipantCard';
+import QRCodeCard from '../components/QRCodeCard';
 
-export default function Participants() {
-  const { isAuthenticated } = useAuth();
-  const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [editModal, setEditModal] = useState(null);
-  const [cardModal, setCardModal] = useState(null);
-  const debouncedSearch = useDebounce(search);
+export default function Success() {
+  const location = useLocation();
+  const participant = location.state?.participant;
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    loadParticipants();
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    if (debouncedSearch.trim()) {
-      searchParticipants(debouncedSearch)
-        .then((res) => setParticipants(res.data))
-        .catch((err) => setError(err.message));
-    } else {
-      loadParticipants();
-    }
-  }, [debouncedSearch, isAuthenticated]);
-
-  const loadParticipants = () => {
-    setLoading(true);
-    getParticipants()
-      .then((res) => setParticipants(res.data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
-
-  const handleMarkPayment = async (id, status) => {
-    try {
-      await markPayment(id, status);
-      loadParticipants();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    const form = new FormData(e.target);
-    const updates = Object.fromEntries(form.entries());
-
-    try {
-      await updateParticipant(editModal.registrationId, updates);
-      setEditModal(null);
-      loadParticipants();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (!participant) {
+    return <Navigate to="/register" replace />;
   }
+
+  const telegram = formatTelegram(participant.telegram);
+  const isPaid = participant.payment === 'Paid';
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="page">
       <div className="container">
-        <h1 className="page-title">Participants</h1>
-        <p className="page-subtitle">Search, edit, and manage registrations.</p>
+        <div className="success-content">
+          <div className="success-icon">✅</div>
+          <h1 className="page-title">Registration Successful!</h1>
+          <p className="page-subtitle">
+            You're officially registered. Save or print your registration card and QR code below —
+            you'll need them at check-in.
+          </p>
 
-        <div className="search-section">
-          <SearchBox value={search} onChange={setSearch} />
+          <div className="alert alert-success no-print" role="status" aria-live="polite">
+            Your registration has been received{!isPaid && ', and your payment is pending verification'}.
+          </div>
+
+          {/* Registration card + QR code — this is the part that gets printed/downloaded */}
+          <div className="card credentials-card" id="printable-area">
+            <div className="credentials-grid">
+              <div className="credentials-cell">
+                <h3 className="credentials-heading">Registration Card</h3>
+                <ParticipantCard participant={participant} showDownload={true} />
+              </div>
+              <div className="credentials-cell">
+                <h3 className="credentials-heading">QR Code</h3>
+                <QRCodeCard registrationId={participant.registrationId} size={160} />
+              </div>
+            </div>
+            <div className="credentials-actions no-print">
+              <button type="button" className="btn btn-secondary" onClick={handlePrint}>
+                🖨️ Print
+              </button>
+            </div>
+          </div>
+
+          {!isPaid && (
+            <div className="card pending-notice no-print">
+              <h3>What happens next?</h3>
+              <ol>
+                <li>We review your payment and transaction number.</li>
+                <li>Your payment status below will update to "Paid" once verified.</li>
+                {telegram && (
+                  <li>
+                    We may contact you on Telegram: <strong>{telegram}</strong>
+                  </li>
+                )}
+              </ol>
+            </div>
+          )}
+
+          <div className="card success-details no-print">
+            <div className="detail-row">
+              <span className="detail-label">Registration ID</span>
+              <span className="detail-value reg-id">{participant.registrationId}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Name</span>
+              <span className="detail-value">{participant.name}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Church</span>
+              <span className="detail-value">{participant.church}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Phone</span>
+              <span className="detail-value">{participant.phone}</span>
+            </div>
+            {telegram && (
+              <div className="detail-row">
+                <span className="detail-label">Telegram</span>
+                <span className="detail-value">{telegram}</span>
+              </div>
+            )}
+            <div className="detail-row">
+              <span className="detail-label">Payment Status</span>
+              <span className={`badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}`}>
+                {isPaid ? 'Paid' : 'Pending verification'}
+              </span>
+            </div>
+            {participant.transactionNumber && (
+              <div className="detail-row">
+                <span className="detail-label">Transaction Number</span>
+                <span className="detail-value">{participant.transactionNumber}</span>
+              </div>
+            )}
+          </div>
+
+          <Link to="/" className="btn btn-secondary no-print">
+            Back to Home
+          </Link>
         </div>
-
-        {error && <div className="alert alert-error">{error}</div>}
-        {loading && <div className="loading">Loading participants...</div>}
-
-        {!loading && participants.length === 0 && (
-          <div className="empty-state">No participants found.</div>
-        )}
-
-        {!loading && participants.length > 0 && (
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Registration ID</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Church</th>
-                  <th>Address</th>
-                  <th>Payment</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {participants.map((p) => (
-                  <tr key={p.registrationId}>
-                    <td>
-                      <code>{p.registrationId}</code>
-                    </td>
-                    <td>{p.name}</td>
-                    <td>{p.phone}</td>
-                    <td>{p.church}</td>
-                    <td>{p.address}</td>
-                    <td>
-                      <span className={`badge ${p.payment === 'Paid' ? 'badge-paid' : 'badge-unpaid'}`}>
-                        {p.payment || 'Unpaid'}
-                      </span>
-                    </td>
-                    <td>{p.date}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-secondary"
-                          onClick={() => setEditModal(p)}
-                        >
-                          Edit
-                        </button>
-                        {p.payment !== 'Paid' ? (
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => handleMarkPayment(p.registrationId, 'Paid')}
-                          >
-                            Mark Paid
-                          </button>
-                        ) : (
-                          <button
-                            className="btn btn-sm btn-secondary"
-                            onClick={() => handleMarkPayment(p.registrationId, 'Unpaid')}
-                          >
-                            Mark Unpaid
-                          </button>
-                        )}
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => setCardModal(p)}
-                        >
-                          Card
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {editModal && (
-          <div className="modal-overlay" onClick={() => setEditModal(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Edit Participant</h2>
-                <button className="modal-close" onClick={() => setEditModal(null)}>
-                  ×
-                </button>
-              </div>
-              <form onSubmit={handleUpdate}>
-                <div className="form-group">
-                  <label>Name</label>
-                  <input name="name" defaultValue={editModal.name} required />
-                </div>
-                <div className="form-group">
-                  <label>Phone</label>
-                  <input name="phone" defaultValue={editModal.phone} required />
-                </div>
-                <div className="form-group">
-                  <label>Church</label>
-                  <input name="church" defaultValue={editModal.church} required />
-                </div>
-                <div className="form-group">
-                  <label>Address</label>
-                  <input name="address" defaultValue={editModal.address} required />
-                </div>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {cardModal && (
-          <div className="modal-overlay" onClick={() => setCardModal(null)}>
-            <div className="modal card-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Registration Card</h2>
-                <button className="modal-close" onClick={() => setCardModal(null)}>
-                  ×
-                </button>
-              </div>
-              <ParticipantCard participant={cardModal} />
-            </div>
-          </div>
-        )}
       </div>
 
       <style>{`
-        .search-section {
+        .success-content {
+          max-width: 560px;
+          margin: 0 auto;
+          text-align: center;
+        }
+        .success-icon {
+          font-size: 3rem;
+          margin-bottom: 0.5rem;
+        }
+        .credentials-card {
+          text-align: center;
           margin-bottom: 1.5rem;
-          max-width: 480px;
         }
-        .action-buttons {
+        .credentials-grid {
           display: flex;
-          gap: 0.375rem;
           flex-wrap: wrap;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 2rem;
+          padding: 0.5rem 0 1rem;
         }
-        code {
-          font-size: 0.8125rem;
-          background: var(--color-bg);
-          padding: 0.125rem 0.375rem;
-          border-radius: 4px;
+        .credentials-cell {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+          min-width: 160px;
         }
-        .card-modal {
-          max-width: 400px;
+        .credentials-heading {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--color-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin: 0;
+        }
+        .credentials-actions {
+          display: flex;
+          justify-content: center;
+          gap: 0.75rem;
+          padding-top: 1rem;
+          margin-top: 0.5rem;
+          border-top: 1px solid var(--color-border);
+        }
+        .pending-notice {
+          text-align: left;
+          margin-bottom: 1.5rem;
+        }
+        .pending-notice h3 {
+          font-size: 1.0625rem;
+          margin-bottom: 0.75rem;
+        }
+        .pending-notice ol {
+          margin-left: 1.25rem;
+          color: var(--color-text-muted);
+          font-size: 0.9375rem;
+        }
+        .pending-notice li {
+          margin-bottom: 0.5rem;
+        }
+        .success-details {
+          text-align: left;
+          margin-bottom: 1.5rem;
+        }
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.625rem 0;
+          border-bottom: 1px solid var(--color-border);
+          gap: 1rem;
+        }
+        .detail-row:last-child {
+          border-bottom: none;
+        }
+        .detail-label {
+          font-size: 0.875rem;
+          color: var(--color-text-muted);
+        }
+        .detail-value {
+          font-weight: 500;
+          text-align: right;
+        }
+        .reg-id {
+          font-family: monospace;
+          color: var(--color-primary);
+          font-weight: 700;
+        }
+
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          #printable-area {
+            box-shadow: none;
+            border: 1px solid #ddd;
+          }
         }
       `}</style>
     </div>
